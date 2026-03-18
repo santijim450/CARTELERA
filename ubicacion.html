@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Ubicar Cine</title>
+ <style>
+    /* Estilos generales y menú */
+    body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #333; }
+    .nav-menu { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd; text-align: center; }
+    .nav-menu a { text-decoration: none; color: #333; margin: 0 10px; font-weight: bold; font-size: 1.1em; }
+    .nav-menu a:hover { color: #007bff; }
+    
+    h1 { text-align: center; margin-bottom: 5px; color: #111; }
+    p.subtitulo { text-align: center; color: #666; margin-bottom: 30px; font-size: 1.1em; }
+
+    /* Contenedor tipo tarjeta para el mapa */
+    .contenedor-mapa {
+        background-color: white;
+        border: 1px solid #eaeaea;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        max-width: 1000px;
+        margin: 0 auto; 
+    }
+
+    /* Botón oscuro sobre el mapa */
+    .btn-localizar {
+        background-color: #111;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        margin-bottom: 20px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .btn-localizar:hover { background-color: #333; }
+
+    /* Estilos del Iframe de Google Maps */
+    iframe {
+        width: 100%;
+        height: 500px; 
+        border: none;
+        border-radius: 8px;
+        background-color: #eee; 
+    }
+ </style>
+</head>
+<body>
+
+ <div class="nav-menu">
+    <a href="index.html">⬅ Volver a Mi Cartelera</a>
+ </div>
+
+ <h1>Ubicar Cines</h1>
+ <p class="subtitulo">Descubre todos los complejos de cine disponibles en tu zona.</p>
+
+ <div class="contenedor-mapa">
+     <button id="btnLocalizar" class="btn-localizar">📍 Buscar con mi GPS actual</button>
+     
+     <iframe 
+        id="mapaCines"
+        src="https://maps.google.com/maps?q=cines+en+Nezahualcoyotl&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Mapa de cines en la zona">
+     </iframe>
+ </div>
+
+ <script>
+    const btnLocalizar = document.getElementById("btnLocalizar");
+    const mapaCines = document.getElementById("mapaCines");
+
+    btnLocalizar.addEventListener("click", () => {
+        if ("geolocation" in navigator) {
+            
+            btnLocalizar.textContent = "Localizando...";
+            btnLocalizar.style.backgroundColor = "#555"; 
+            
+            navigator.geolocation.getCurrentPosition(
+                (posicion) => {
+                    const latitud = posicion.coords.latitude;
+                    const longitud = posicion.coords.longitude;
+                    
+                    // URL oficial de Google Maps para buscar "cines" alrededor de unas coordenadas exactas
+                    const urlMapa = `https://maps.google.com/maps?q=cines+cerca+de+${latitud},${longitud}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+                    mapaCines.src = urlMapa;
+                    
+                    btnLocalizar.textContent = "Mostrando cines cerca de ti";
+                    btnLocalizar.style.backgroundColor = "#28a745"; 
+                },
+                (error) => {
+                    console.error("Error obteniendo ubicación:", error);
+                    alert("Asegúrate de permitir el acceso a la ubicación en tu navegador.");
+                    btnLocalizar.textContent = "Buscar con mi GPS actual";
+                    btnLocalizar.style.backgroundColor = "#111"; 
+                }
+            );
+        } else {
+            alert("Tu navegador no soporta geolocalización.");
+        }
+    });
+ </script>
+</body>
+</html>
