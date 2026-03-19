@@ -1,6 +1,5 @@
 <?php
-require_once __DIR__ . "/BAD_REQUEST.php"; // Asegúrate de que define define("BAD_REQUEST", 400);
-
+require_once __DIR__ . "/BAD_REQUEST.php"; 
 function recibeJson()
 {
     // Obtenemos el cuerpo de la petición
