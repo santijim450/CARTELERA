@@ -1,0 +1,22 @@
+<?php
+require_once __DIR__ . "/BAD_REQUEST.php"; // Asegúrate de que define define("BAD_REQUEST", 400);
+
+function recibeJson()
+{
+    // Obtenemos el cuerpo de la petición
+    $json = json_decode(file_get_contents("php://input"));
+
+    if ($json === null) {
+        http_response_code(BAD_REQUEST);
+        header("Content-Type: application/problem+json; charset=utf-8");
+        // Devolvemos el error en formato JSON
+        echo json_encode([
+            "status" => BAD_REQUEST,
+            "title" => "Los datos recibidos no están en formato JSON.",
+            "type" => "/errors/datosnojson.html"
+        ]);
+        exit();
+    }
+
+    return $json;
+}
