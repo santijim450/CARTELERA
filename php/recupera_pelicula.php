@@ -1,32 +1,31 @@
 <?php
+require_once __DIR__ . "/lib/manejaErrores.php";
+require_once __DIR__ . "/lib/BAD_REQUEST.php";
+require_once __DIR__ . "/lib/ProblemDetailsException.php";
 require_once __DIR__ . "/lib/devuelveJson.php";
 require_once __DIR__ . "/../bd/conexion.php";
 
 $id = $_GET['id'] ?? '';
 
 if ($id === '') {
-    http_response_code(400);
-    header('Content-Type: application/problem+json');
-    echo json_encode(["title" => "Error", "detail" => "Falta el ID."]);
-    exit;
+    throw new ProblemDetailsException([
+        "status" => BAD_REQUEST,
+        "title" => "Error",
+        "detail" => "Falta el ID."
+    ]);
 }
 
-try {
-    $stmt = $pdo->prepare("SELECT * FROM peliculas WHERE id = :id");
-    $stmt->execute([':id' => $id]);
-    $pelicula = $stmt->fetch();
 
-    if (!$pelicula) {
-        http_response_code(404);
-        header('Content-Type: application/problem+json');
-        echo json_encode(["title" => "No encontrado", "detail" => "La película no existe."]);
-        exit;
-    }
+$stmt = $pdo->prepare("SELECT * FROM peliculas WHERE id = :id");
+$stmt->execute([':id' => $id]);
+$pelicula = $stmt->fetch();
 
-    devuelveJson($pelicula);
-} catch (PDOException $e) {
-    http_response_code(500);
-    header('Content-Type: application/problem+json');
-    echo json_encode(["title" => "Error", "detail" => "Fallo al conectar a BD."]);
-    exit;
+if (!$pelicula) {
+    throw new ProblemDetailsException([
+        "status" => 404,
+        "title" => "No encontrado",
+        "detail" => "La película no existe."
+    ]);
 }
+
+devuelveJson($pelicula);

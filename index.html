@@ -4,53 +4,25 @@
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>Mi Cartelera Local</title>
+
+ <script type="module" src="js/lib/manejaErrores.js"></script>
+
  <style>
-    /* Estilos generales de la página */
     body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #333; }
     
-    /* Menú de navegación superior */
     .nav-menu { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd; text-align: center; }
     .nav-menu a { text-decoration: none; color: #333; margin: 0 10px; font-weight: bold; font-size: 1.1em; }
     .nav-menu a:hover { color: #007bff; }
     
-    h1 { text-align: center; margin-bottom: 30px; }
+    h1, h2 { text-align: center; color: #111; }
+    h1 { margin-bottom: 30px; }
+    h2 { margin-top: 0; }
 
-    /* Cuadrícula de tarjetas (Grid) */
     .contenedor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-    
-    /* Diseño individual de cada tarjeta */
-    .tarjeta {
-      background-color: white;
-      border: 1px solid #eaeaea;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      text-align: center; 
-    }
-
-    /* Estilos de la imagen de portada */
-    .tarjeta img {
-        max-width: 100%; 
-        border-radius: 5px; 
-        margin-bottom: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
+    .tarjeta { background-color: white; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; }
+    .tarjeta img { max-width: 100%; border-radius: 5px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .tarjeta h3 { margin: 10px 0 5px 0; color: #222; font-size: 1.4em; }
-    
-    /* Etiqueta gris para el género */
-    .etiqueta {
-      display: inline-block;
-      background-color: #f1f3f5;
-      padding: 5px 10px;
-      border-radius: 4px;
-      border: 1px solid #dee2e6;
-      font-size: 0.85em;
-      color: #495057;
-      margin-bottom: 15px;
-    }
-    
-    /* Botones de acción inferiores */
+    .etiqueta { display: inline-block; background-color: #f1f3f5; padding: 5px 10px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.85em; color: #495057; margin-bottom: 15px; }
     .acciones { display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid #eaeaea; padding-top: 15px; }
     .btn { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9em; flex: 1; text-align: center; }
     .btn-editar { background-color: #e2e8f0; color: #333; }
@@ -59,92 +31,74 @@
  </style>
 </head>
 <body>
- <h1>Mis Películas Locales</h1>
- 
- <div class="nav-menu">
+
+ <nav class="nav-menu">
     <a href="agregar.html">➕ Añadir Película / Buscador API</a>
     <a href="recomendaciones.html">⭐ Recomendaciones</a>
     <a href="ubicacion.html">📍 Ubicar Cine</a>
- </div>
+ </nav>
  
- <div id="listaPeliculas" class="contenedor-grid"></div>
+ <header>
+    <h1>Mis Películas Locales</h1>
+ </header>
+ 
+ <main id="listaPeliculas" class="contenedor-grid"></main>
 
  <script type="module">
-  // Importamos las librerías del framework de tu clase
   import { consume } from "./js/lib/consume.js"
   import { recibeJson } from "./js/lib/recibeJson.js"
-  import { muestraError } from "./js/lib/muestraError.js"
 
-  // Cargamos la cartelera automáticamente al abrir la página
   window.onload = cargarDatos;
 
-  // Función principal para cargar la cartelera desde PHP y SQLite
   async function cargarDatos() {
-   try {
-    const respuesta = await consume(recibeJson("php/cartelera.php"));
-    const peliculas = await respuesta.json();
-    
-    let html = "";
-    
-    if (peliculas.length === 0) {
-        // Mensaje si la base de datos está vacía
-        html = "<p style='grid-column: 1 / -1; text-align: center; margin-top: 50px;'>No hay películas en tu base de datos.<br><br><a href='agregar.html' style='display:inline-block; padding:10px; background:#111; color:white; text-decoration:none; border-radius:5px;'>➕ Ve a Añadir Película y busca alguna!</a></p>";
-    } else {
-        peliculas.forEach(p => {
-            // Ponemos una imagen por defecto si la peli antigua no tenía imagen
-            const img = p.imagen ? p.imagen : 'https://via.placeholder.com/210x295?text=Cartelera';
-            
-            // Construimos la tarjeta HTML para cada película con el ID y datos
-            html += `
-             <div class="tarjeta">
-                 <img src="${img}" alt="Portada de ${p.titulo}">
-                 <h3>${p.titulo}</h3>
-                 <span class="etiqueta">${p.genero}</span>
-                 <div class="acciones">
-                     <button class="btn btn-editar" data-id="${p.id}">📝 Editar</button>
-                     <button class="btn btn-eliminar" data-id="${p.id}">🗑️ Eliminar</button>
-                 </div>
-             </div>
-            `;
-        });
-    }
-    document.getElementById("listaPeliculas").innerHTML = html;
-   } catch (error) {
-    // Si la conexión falla, usamos el manejador de errores de tu clase
-    muestraError(error);
+   const respuesta = await consume(recibeJson("php/cartelera.php"));
+   const peliculas = await respuesta.json();
+   
+   let html = "";
+   
+   if (peliculas.length === 0) {
+       html = "<p style='grid-column: 1 / -1; text-align: center; margin-top: 50px;'>No hay películas en tu base de datos.<br><br><a href='agregar.html' style='display:inline-block; padding:10px; background:#111; color:white; text-decoration:none; border-radius:5px;'>➕ Ve a Añadir Película y busca alguna!</a></p>";
+   } else {
+       peliculas.forEach(p => {
+           const img = p.imagen ? p.imagen : 'https://via.placeholder.com/210x295?text=Cartelera';
+           html += `
+            <article class="tarjeta">
+                <figure style="margin: 0;">
+                    <img src="${img}" alt="Portada de ${p.titulo}">
+                </figure>
+                <h3>${p.titulo}</h3>
+                <span class="etiqueta">${p.genero}</span>
+                <section class="acciones">
+                    <button class="btn btn-editar" data-id="${p.id}">📝 Editar</button>
+                    <button class="btn btn-eliminar" data-id="${p.id}">🗑️ Eliminar</button>
+                </section>
+            </article>
+           `;
+       });
    }
+   document.getElementById("listaPeliculas").innerHTML = html;
   }
 
-  // Delegación de eventos: Escuchar clics en el contenedor de las películas
   document.getElementById("listaPeliculas").addEventListener("click", async (evento) => {
-      
-      // Funcionalidad para ELIMINAR
       if (evento.target.classList.contains("btn-eliminar")) {
           const id = evento.target.getAttribute("data-id");
-          const tituloTarjeta = evento.target.closest('.tarjeta').querySelector('h3').innerText;
+          const tituloTarjeta = evento.target.closest('article').querySelector('h3').innerText;
           
           if (confirm(`¿Estás seguro de que deseas eliminar "${tituloTarjeta}"?`)) {
               await eliminarPelicula(id);
           }
       }
       
-      // Funcionalidad para EDITAR (Redirige a editar.html)
       if (evento.target.classList.contains("btn-editar")) {
           const id = evento.target.getAttribute("data-id");
           window.location.href = `editar.html?id=${id}`;
       }
   });
 
-  // Función para llamar al servicio de eliminación en PHP
   async function eliminarPelicula(id) {
-      try {
-          const respuesta = await consume(recibeJson(`php/elimina_pelicula.php?id=${id}`, "DELETE"));
-          const json = await respuesta.json();
-          // Recargamos la cartelera
-          cargarDatos();
-      } catch (error) {
-          muestraError(error);
-      }
+      const respuesta = await consume(recibeJson(`php/elimina_pelicula.php?id=${id}`, "DELETE"));
+      const json = await respuesta.json();
+      cargarDatos();
   }
  </script>
 </body>

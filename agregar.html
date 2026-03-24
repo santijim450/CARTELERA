@@ -10,13 +10,11 @@
     .nav-menu a { text-decoration: none; color: #333; margin-right: 15px; font-weight: bold; font-size: 1.1em; }
     .nav-menu a:hover { color: #007bff; }
     
-  
     .buscador-contenedor { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
     .buscador-contenedor input { flex: 1; min-width: 200px; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; }
     .btn-buscar { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1em; }
     .btn-buscar:hover { background: #0056b3; }
     
-
     .contenedor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
     .tarjeta { background: white; border: 1px solid #eaeaea; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .tarjeta img { max-width: 100%; border-radius: 5px; margin-bottom: 10px; }
@@ -28,22 +26,23 @@
  </style>
 </head>
 <body>
- <div class="nav-menu">
+ <nav class="nav-menu">
     <a href="index.html">⬅ Volver a Mi Cartelera</a>
- </div>
+ </nav>
 
- <h1>Buscar y Añadir a Mi Colección</h1>
+ <header>
+    <h1>Buscar y Añadir a Mi Colección</h1>
+ </header>
  
  <form id="formaBusqueda" class="buscador-contenedor">
      <input type="text" id="inputBusqueda" placeholder="Ej. Batman, The Last of Us, Halo..." required>
      <button type="submit" class="btn-buscar">🔍 Buscar en API</button>
  </form>
 
- <div id="resultados" class="contenedor-grid"></div>
+ <main id="resultados" class="contenedor-grid"></main>
 
 <script type="module">
   import { consume } from "./js/lib/consume.js"
-  import { muestraError } from "./js/lib/muestraError.js"
   import { enviaJsonRecibeJson } from "./js/lib/enviaJsonRecibeJson.js"
 
   const formaBusqueda = document.getElementById("formaBusqueda");
@@ -52,58 +51,53 @@
   async function buscarEnAPI(evento) {
       evento.preventDefault(); 
       const query = document.getElementById("inputBusqueda").value;
-      const resultadosDiv = document.getElementById("resultados");
+      const resultadosMain = document.getElementById("resultados");
       
-      resultadosDiv.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Buscando...</p>";
+      resultadosMain.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Buscando...</p>";
 
-      try {
-          const queryLimpio = encodeURIComponent(query);
-          const respuesta = await fetch(`https://api.tvmaze.com/search/shows?q=${queryLimpio}`);
-          
-          if (!respuesta.ok) throw new Error("Fallo la conexión con la API");
-          
-          const datos = await respuesta.json();
-          
-          if (datos.length === 0) {
-              resultadosDiv.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>No se encontraron resultados. Intenta con otro nombre.</p>";
-              return;
-          }
-
-          let html = "";
-          datos.forEach(item => {
-              const show = item.show;
-              const imagenUrl = show.image ? show.image.medium : 'https://via.placeholder.com/210x295?text=Sin+Imagen';
-              const genero = show.genres.length > 0 ? show.genres[0] : 'Variado';
-              
-              const tituloSeguro = show.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-              const generoSeguro = genero.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-              html += `
-               <div class="tarjeta">
-                   <img src="${imagenUrl}" alt="Portada">
-                   <h3>${show.name}</h3>
-                   <p>Género: ${genero}</p>
-                   <button class="btn-guardar" 
-                           data-titulo="${tituloSeguro}" 
-                           data-genero="${generoSeguro}" 
-                           data-imagen="${imagenUrl}">
-                       ➕ Guardar en Cartelera
-                   </button>
-               </div>
-              `;
-          });
-          resultadosDiv.innerHTML = html;
-      } catch (error) {
-          console.error("Error en la búsqueda:", error);
-          muestraError(error);
-          resultadosDiv.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: red;'>Hubo un error al buscar.</p>";
+      const queryLimpio = encodeURIComponent(query);
+      const respuesta = await fetch(`https://api.tvmaze.com/search/shows?q=${queryLimpio}`);
+      
+      if (!respuesta.ok) throw new Error("Fallo la conexión con la API");
+      
+      const datos = await respuesta.json();
+      
+      if (datos.length === 0) {
+          resultadosMain.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>No se encontraron resultados. Intenta con otro nombre.</p>";
+          return;
       }
+
+      let html = "";
+      datos.forEach(item => {
+          const show = item.show;
+          const imagenUrl = show.image ? show.image.medium : 'https://via.placeholder.com/210x295?text=Sin+Imagen';
+          const genero = show.genres.length > 0 ? show.genres[0] : 'Variado';
+          
+          const tituloSeguro = show.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const generoSeguro = genero.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+          html += `
+           <article class="tarjeta">
+               <figure style="margin: 0;">
+                   <img src="${imagenUrl}" alt="Portada">
+               </figure>
+               <h3>${show.name}</h3>
+               <p>Género: ${genero}</p>
+               <button class="btn-guardar" 
+                       data-titulo="${tituloSeguro}" 
+                       data-genero="${generoSeguro}" 
+                       data-imagen="${imagenUrl}">
+                   ➕ Guardar en Cartelera
+               </button>
+           </article>
+          `;
+      });
+      resultadosMain.innerHTML = html;
   }
 
   document.getElementById("resultados").addEventListener("click", async (evento) => {
       if (evento.target.classList.contains("btn-guardar")) {
           const btn = evento.target;
-          
           
           const modelo = {
               titulo: btn.getAttribute("data-titulo"),
@@ -111,16 +105,12 @@
               imagen: btn.getAttribute("data-imagen")
           };
 
-          try {
-              const respuesta = await consume(
-                  enviaJsonRecibeJson("php/agrega_pelicula.php", modelo)
-              );
-              const json = await respuesta.json();
-              alert(json.mensaje);
-              window.location.href = "index.html"; 
-          } catch (error) {
-              muestraError(error);
-          }
+          const respuesta = await consume(
+              enviaJsonRecibeJson("php/agrega_pelicula.php", modelo)
+          );
+          const json = await respuesta.json();
+          alert(json.mensaje);
+          window.location.href = "index.html"; 
       }
   });
  </script>
