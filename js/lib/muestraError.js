@@ -1,39 +1,21 @@
 import { ProblemDetailsError } from "./ProblemDetailsError.js"
 
 /**
- * Muestra los datos de una Error en la consola y en un cuadro de alerta.
- * @param { ProblemDetailsError | Error | null } error descripción del error.
+ * Redirecciona a una página de error específica basada en el tipo de error.
+ * @param {ProblemDetailsError | Error} error
  */
 export function muestraError(error) {
-
- if (error === null) {
-
-  console.error("Error")
-  alert("Error")
-
- } else if (error instanceof ProblemDetailsError) {
-
-  const problemDetails = error.problemDetails
-
-  let mensaje =
-   typeof problemDetails["title"] === "string" ? problemDetails["title"] : ""
-  if (typeof problemDetails["detail"] === "string") {
-   if (mensaje !== "") {
-    mensaje += "\n\n"
-   }
-   mensaje += problemDetails["detail"]
+  console.error(error);
+  if (error instanceof ProblemDetailsError) {
+    // Si el error tiene un "type" (URL), redireccionamos a esa página
+    if (error.type && error.type !== "about:blank") {
+      location.href = error.type;
+    } else {
+      // Si no hay tipo específico, usamos el error interno genérico
+      location.href = "/errors/errorinterno.html";
+    }
+  } else {
+    // Para errores genéricos de JS
+    location.href = "/errors/errorinterno.html";
   }
-  if (mensaje === "") {
-   mensaje = "Error"
-  }
-  console.error(error, problemDetails)
-  alert(mensaje)
-
- } else {
-
-  console.error(error)
-  alert(error.message)
-
- }
-
 }

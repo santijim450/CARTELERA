@@ -13,11 +13,11 @@ $genero = trim($datos->genero ?? 'Variado');
 $imagen = trim($datos->imagen ?? ''); 
 
 if ($titulo === '') {
+    // Se lanza una excepción que redirige a la página de error de campo en blanco
     throw new ProblemDetailsException([
         "status" => BAD_REQUEST,
         "title" => "Falta el título.",
-        "detail" => "El título de la película es obligatorio.",
-        "type" => "/errors/faltatitulo.html"
+        "type" => ERROR_CAMPO_EN_BLANCO
     ]);
 }
 
