@@ -1,27 +1,17 @@
 <?php
-
 require_once __DIR__ . "/lib/manejaErrores.php";
-require_once __DIR__ . "/lib/BAD_REQUEST.php";
-require_once __DIR__ . "/lib/devuelveJson.php";
-require_once __DIR__ . "/lib/recibeJson.php";
 require_once __DIR__ . "/../bd/conexion.php";
+require_once __DIR__ . "/lib/recibeEnteroObligatorio.php";
+require_once __DIR__ . "/lib/recibeTextoObligatorio.php";
+require_once __DIR__ . "/lib/devuelveJson.php";
 
-$datos = recibeJson();
+$id = recibeEnteroObligatorio("id");
+$titulo = recibeTextoObligatorio("titulo");
+$genero = recibeTextoObligatorio("genero");
+$imagen = recibeTextoObligatorio("imagen");
 
-$id = trim($datos->id ?? '');
-$titulo = trim($datos->titulo ?? '');
-$genero = trim($datos->genero ?? '');
+$db = conexion();
+$stmt = $db->prepare("UPDATE PELICULA SET TITULO = ?, GENERO = ?, IMAGEN = ? WHERE ID = ?");
+$stmt->execute([$titulo, $genero, $imagen, $id]);
 
-if ($id === '' || $titulo === '') {
-    throw new ProblemDetailsException([
-        "status" => BAD_REQUEST,
-        "title" => "Datos inválidos", 
-        "detail" => "El título es obligatorio.",
-        "type" => "/errors/faltatitulo.html"
-    ]);
-}
-
-$stmt = $pdo->prepare("UPDATE peliculas SET titulo = :titulo, genero = :genero WHERE id = :id");
-$stmt->execute([':titulo' => $titulo, ':genero' => $genero, ':id' => $id]);
-
-devuelveJson(["mensaje" => "Película actualizada con éxito."]);
+devuelveJson(["mensaje" => "Película actualizada con éxito"]);

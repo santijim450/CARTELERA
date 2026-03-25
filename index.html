@@ -47,6 +47,8 @@
  <script type="module">
   import { consume } from "./js/lib/consume.js"
   import { recibeJson } from "./js/lib/recibeJson.js"
+  // 1. IMPORTAR htmlentities
+  import { htmlentities } from "./js/lib/htmlentities.js"
 
   window.onload = cargarDatos;
 
@@ -60,14 +62,21 @@
        html = "<p style='grid-column: 1 / -1; text-align: center; margin-top: 50px;'>No hay películas en tu base de datos.<br><br><a href='agregar.html' style='display:inline-block; padding:10px; background:#111; color:white; text-decoration:none; border-radius:5px;'>➕ Ve a Añadir Película y busca alguna!</a></p>";
    } else {
        peliculas.forEach(p => {
-           const img = p.imagen ? p.imagen : 'https://via.placeholder.com/210x295?text=Cartelera';
+           // 2. PROTEGER LOS DATOS CON htmlentities
+           const titulo = typeof p.titulo === "string" ? htmlentities(p.titulo) : "";
+           const genero = typeof p.genero === "string" ? htmlentities(p.genero) : "";
+           const imagenUrl = typeof p.imagen === "string" ? htmlentities(p.imagen) : "";
+           
+           const img = imagenUrl ? imagenUrl : 'https://via.placeholder.com/210x295?text=Cartelera';
+           
+           // 3. USAR LAS VARIABLES PROTEGIDAS
            html += `
             <article class="tarjeta">
                 <figure style="margin: 0;">
-                    <img src="${img}" alt="Portada de ${p.titulo}">
+                    <img src="${img}" alt="Portada de ${titulo}">
                 </figure>
-                <h3>${p.titulo}</h3>
-                <span class="etiqueta">${p.genero}</span>
+                <h3>${titulo}</h3>
+                <span class="etiqueta">${genero}</span>
                 <section class="acciones">
                     <button class="btn btn-editar" data-id="${p.id}">📝 Editar</button>
                     <button class="btn btn-eliminar" data-id="${p.id}">🗑️ Eliminar</button>

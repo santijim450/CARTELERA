@@ -1,118 +1,73 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Añadir Película</title>
- <style>
-    body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #333; }
-    .nav-menu { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd; }
-    .nav-menu a { text-decoration: none; color: #333; margin-right: 15px; font-weight: bold; font-size: 1.1em; }
-    .nav-menu a:hover { color: #007bff; }
-    
-    .buscador-contenedor { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .buscador-contenedor input { flex: 1; min-width: 200px; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; }
-    .btn-buscar { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1em; }
-    .btn-buscar:hover { background: #0056b3; }
-    
-    .contenedor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-    .tarjeta { background: white; border: 1px solid #eaeaea; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .tarjeta img { max-width: 100%; border-radius: 5px; margin-bottom: 10px; }
-    .tarjeta h3 { margin: 0 0 5px 0; font-size: 1.2em; }
-    .tarjeta p { margin: 0 0 15px 0; color: #666; font-size: 0.9em; }
-    
-    .btn-guardar { background: #111; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .btn-guardar:hover { background: #333; }
- </style>
+    <meta charset="UTF-8">
+    <title>Añadir Película</title>
+    <script type="module" src="js/lib/manejaErrores.js"></script>
+    <style>
+        /* Tus estilos originales */
+        body { font-family: sans-serif; background-color: #f8f9fa; padding: 20px; }
+        .contenedor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .tarjeta { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tarjeta img { max-width: 100%; border-radius: 5px; }
+        .btn-guardar { background: #111; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+    </style>
 </head>
 <body>
- <nav class="nav-menu">
-    <a href="index.html">⬅ Volver a Mi Cartelera</a>
- </nav>
+    <nav><a href="index.html">⬅ Volver</a></nav>
+    <h1>Añadir a mi Cartelera</h1>
+    <form id="formaBusqueda">
+        <input type="text" id="inputBusqueda" placeholder="Buscar película..." required>
+        <button type="submit">🔍 Buscar</button>
+    </form>
+    <main id="resultados" class="contenedor-grid"></main>
 
- <header>
-    <h1>Buscar y Añadir a Mi Colección</h1>
- </header>
- 
- <form id="formaBusqueda" class="buscador-contenedor">
-     <input type="text" id="inputBusqueda" placeholder="Ej. Batman, The Last of Us, Halo..." required>
-     <button type="submit" class="btn-buscar">🔍 Buscar en API</button>
- </form>
+    <script type="module">
+        import { consume } from "./js/lib/consume.js";
 
- <main id="resultados" class="contenedor-grid"></main>
+        // Búsqueda (TVMaze API)
+        document.getElementById("formaBusqueda").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const query = document.getElementById("inputBusqueda").value;
+            const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`);
+            const datos = await res.json();
+            document.getElementById("resultados").innerHTML = datos.map(item => `
+                <article class="tarjeta">
+                    <img src="${item.show.image ? item.show.image.medium : 'https://via.placeholder.com/210x295'}">
+                    <h3>${item.show.name}</h3>
+                    <button class="btn-guardar" 
+                            data-titulo="${item.show.name.replace(/"/g, '&quot;')}" 
+                            data-genero="${item.show.genres[0] || 'Variado'}" 
+                            data-imagen="${item.show.image ? item.show.image.medium : ''}">
+                        ➕ Guardar
+                    </button>
+                </article>
+            `).join('');
+        });
 
-<script type="module">
-  import { consume } from "./js/lib/consume.js"
-  import { enviaJsonRecibeJson } from "./js/lib/enviaJsonRecibeJson.js"
+        // Procesamiento del Formulario de Guardado
+        document.getElementById("resultados").addEventListener("click", async (evento) => {
+            if (evento.target.classList.contains("btn-guardar")) {
+                const btn = evento.target;
+                
+                // Preparamos los datos como formulario convencional
+                const formulario = new URLSearchParams();
+                formulario.append("nombre", btn.getAttribute("data-titulo"));
+                formulario.append("genero", btn.getAttribute("data-genero"));
+                formulario.append("imagen", btn.getAttribute("data-imagen"));
 
-  const formaBusqueda = document.getElementById("formaBusqueda");
-  formaBusqueda.addEventListener("submit", buscarEnAPI);
+                // Enviamos al servicio PHP que procesa el formulario
+                const respuesta = await consume(fetch("php/agrega_pelicula.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formulario
+                }));
 
-  async function buscarEnAPI(evento) {
-      evento.preventDefault(); 
-      const query = document.getElementById("inputBusqueda").value;
-      const resultadosMain = document.getElementById("resultados");
-      
-      resultadosMain.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Buscando...</p>";
-
-      const queryLimpio = encodeURIComponent(query);
-      const respuesta = await fetch(`https://api.tvmaze.com/search/shows?q=${queryLimpio}`);
-      
-      if (!respuesta.ok) throw new Error("Fallo la conexión con la API");
-      
-      const datos = await respuesta.json();
-      
-      if (datos.length === 0) {
-          resultadosMain.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>No se encontraron resultados. Intenta con otro nombre.</p>";
-          return;
-      }
-
-      let html = "";
-      datos.forEach(item => {
-          const show = item.show;
-          const imagenUrl = show.image ? show.image.medium : 'https://via.placeholder.com/210x295?text=Sin+Imagen';
-          const genero = show.genres.length > 0 ? show.genres[0] : 'Variado';
-          
-          const tituloSeguro = show.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          const generoSeguro = genero.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-          html += `
-           <article class="tarjeta">
-               <figure style="margin: 0;">
-                   <img src="${imagenUrl}" alt="Portada">
-               </figure>
-               <h3>${show.name}</h3>
-               <p>Género: ${genero}</p>
-               <button class="btn-guardar" 
-                       data-titulo="${tituloSeguro}" 
-                       data-genero="${generoSeguro}" 
-                       data-imagen="${imagenUrl}">
-                   ➕ Guardar en Cartelera
-               </button>
-           </article>
-          `;
-      });
-      resultadosMain.innerHTML = html;
-  }
-
-  document.getElementById("resultados").addEventListener("click", async (evento) => {
-      if (evento.target.classList.contains("btn-guardar")) {
-          const btn = evento.target;
-          
-          const modelo = {
-              titulo: btn.getAttribute("data-titulo"),
-              genero: btn.getAttribute("data-genero"),
-              imagen: btn.getAttribute("data-imagen")
-          };
-
-          const respuesta = await consume(
-              enviaJsonRecibeJson("php/agrega_pelicula.php", modelo)
-          );
-          const json = await respuesta.json();
-          alert(json.mensaje);
-          window.location.href = "index.html"; 
-      }
-  });
- </script>
+                const json = await respuesta.json();
+                alert(json.mensaje);
+                window.location.href = "index.html";
+            }
+        });
+    </script>
 </body>
 </html>
